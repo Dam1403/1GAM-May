@@ -4,20 +4,69 @@ using UnityEngine;
 
 
 
-public class GameNode : MonoBehaviour {
+public class GameNode{
     //OPPOSITES NEED TO BE NEXT TO EACH OTHER OTHERWISE THE 
     //ANTI FUNCTION WILL BREAK;
     public enum NeighborDirection { North=0, South=1, East=2, West=3 };
     
     private GameNode[] neighbors = new GameNode[System.Enum.GetNames(typeof(NeighborDirection)).Length];
 
+    public GameNode east_node
+    {
+        get
+        {
+            return GetNeighbor(NeighborDirection.East);
+        }
+        set
+        {
+            SetNeighbor(value,NeighborDirection.East);
+        }
+    }
+
+    public GameNode west_node
+    {
+        get
+        {
+            return GetNeighbor(NeighborDirection.West);
+        }
+        set
+        {
+            SetNeighbor(value, NeighborDirection.West);
+        }
+    }
+    public GameNode north_node
+    {
+        get
+        {
+            return GetNeighbor(NeighborDirection.North);
+        }
+        set
+        {
+            SetNeighbor(value, NeighborDirection.North);
+        }
+    }
+
+    public GameNode south_node
+    {
+        get
+        {
+            return GetNeighbor(NeighborDirection.North);
+        }
+        set
+        {
+            SetNeighbor(value, NeighborDirection.North);
+        }
+    }
+
+
+
     private Color GameNode_color;
     private int gen_id;
     
 
-    public void Initialize(int id)
+    public GameNode(int id)
     {
-        gen_id = id;
+
     }
 
     public int  GetID()
@@ -31,6 +80,12 @@ public class GameNode : MonoBehaviour {
         neighbors[(int)direction] = new_neighbor;
         new_neighbor.SetNeighbor(this, AntiDirection(direction));
 
+    }
+
+    public GameNode GetNeighbor(NeighborDirection direction)
+    {
+
+        return neighbors[(int)direction];
     }
 
     public void SetNeighbors(GameNode[] new_neighbors)
