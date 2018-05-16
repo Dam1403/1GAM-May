@@ -50,11 +50,11 @@ public class GameNode{
     {
         get
         {
-            return GetNeighbor(NeighborDirection.North);
+            return GetNeighbor(NeighborDirection.South);
         }
         set
         {
-            SetNeighbor(value, NeighborDirection.North);
+            SetNeighbor(value, NeighborDirection.South);
         }
     }
 
@@ -67,6 +67,7 @@ public class GameNode{
     public GameNode(int id)
     {
 
+        gen_id = id;
     }
 
     public int  GetID()
@@ -77,8 +78,8 @@ public class GameNode{
     public void SetNeighbor(GameNode new_neighbor, NeighborDirection direction)
     {
 
+
         neighbors[(int)direction] = new_neighbor;
-        new_neighbor.SetNeighbor(this, AntiDirection(direction));
 
     }
 
@@ -100,10 +101,10 @@ public class GameNode{
 
     private NeighborDirection AntiDirection(NeighborDirection direction)
     {
-        int LorR = (int)direction & 1;
+        int LorR = ~((int)direction) & 1;
         int high_bits = (int)direction & -2;
 
-        return (NeighborDirection)(~LorR ^ high_bits);
+        return (NeighborDirection)(LorR ^ high_bits);
 
     }
     
