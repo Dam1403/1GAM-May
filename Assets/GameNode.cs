@@ -20,6 +20,7 @@ public class GameNode{
         set
         {
             SetNeighbor(value,NeighborDirection.East);
+
         }
     }
 
@@ -80,7 +81,7 @@ public class GameNode{
 
 
         neighbors[(int)direction] = new_neighbor;
-
+        new_neighbor.GetNeighbors()[(int)AntiDirection(direction)] = this;
     }
 
     public GameNode GetNeighbor(NeighborDirection direction)

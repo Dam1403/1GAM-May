@@ -37,10 +37,9 @@ public class GameMap : MonoBehaviour {
         GameNode top = new GameNode(1);
 
         top.east_node = new GameNode(2);
-        top.east_node.west_node = top;
+
 
         top.north_node = new GameNode(2);
-        top.north_node.south_node = top;
 
         diamond_rec(top.east_node, top.north_node,side_length);
 
@@ -58,31 +57,21 @@ public class GameMap : MonoBehaviour {
         {
             GameNode end_node = new GameNode(east.GetID() + 1);
             east.north_node = end_node;
-            end_node.south_node = east;
-
             north.east_node = end_node;
-            end_node.west_node = north; // this can be done in accessor
-
         }
 
         else if (side_length <= east.GetID() && side_length <= north.GetID())
         {
 
             east.north_node = new GameNode(east.GetID() + 1);
-            east.north_node.south_node = east;
-
             north.east_node = new GameNode(north.GetID() + 1);
-            north.east_node.west_node = north;
-
             diamond_rec(east.north_node, north.east_node, side_length);
         }
 
         else
         {
             east.east_node = new GameNode(east.GetID() + 1);
-            east.east_node.west_node = east;
             north.north_node = new GameNode(north.GetID() + 1);
-            north.north_node.south_node = north;
             diamond_rec(east.east_node, north.north_node, side_length);
         }
 
