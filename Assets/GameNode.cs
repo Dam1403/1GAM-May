@@ -8,7 +8,6 @@ public class GameNode : MonoBehaviour {
     //OPPOSITES NEED TO BE NEXT TO EACH OTHER OTHERWISE THE 
     //ANTI FUNCTION WILL BREAK;
     public enum NeighborDirection { North=0, South=1, East=2, West=3 };
-    
     private GameNode[] neighbors = new GameNode[System.Enum.GetNames(typeof(NeighborDirection)).Length];
 
     private Color GameNode_color;
@@ -51,18 +50,30 @@ public class GameNode : MonoBehaviour {
         return (NeighborDirection)(~LorR ^ high_bits);
 
     }
-    
 
-    public void SwapWithNeighbor(GameNode swap_neighbor,NeighborDirection direction)
+
+    public void SwapWithNeighbor(GameNode swap_neighbor, NeighborDirection direction)
     {
         GameNode[] neighbor_neighbors = swap_neighbor.GetNeighbors();
-
         swap_neighbor.SetNeighbors(neighbors);
         this.neighbors = neighbor_neighbors;
-        SetNeighbor(swap_neighbor, AntiDirection(direction));
 
+        for (int i = 0; i < neighbors.Length; i++)
+        {
+            if(neighbor_neighbors[i] != null)
+            {
+                neighbor_neighbors[i].SetNeighbor(swap_neighbor, (NeighborDirection)i);
+            }
+            if(neighbors[i] != null)
+            {
+                neighbors[i].SetNeighbor(this, (NeighborDirection)i);
+            }
+
+        }
+        
     }
 
+    
 
 
 }
