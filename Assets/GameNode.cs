@@ -4,141 +4,123 @@ using UnityEngine;
 
 
 
-public class GameNode{
-    //OPPOSITES NEED TO BE NEXT TO EACH OTHER OTHERWISE THE 
-    //ANTI FUNCTION WILL BREAK;
-    public enum NeighborDirection { North=0, South=1, East=2, West=3 };
-    private GameNode[] neighbors = new GameNode[System.Enum.GetNames(typeof(NeighborDirection)).Length];
+public enum NodeColor { Red=0, Green=1, Blue=2 }
 
-    public GameNode east_node
+
+public class GameNode : MonoBehaviour {
+    private static int GAMENODE_COLOR_COUNT = 3;
+    private int _my_height;
+    private int _my_width;
+
+    private NodeColor _my_color;
+
+    private bool is_destroyed = false;
+
+    public string id;
+
+    public override bool Equals(object other)
     {
-        get
+        GameNode node = other as GameNode;
+        if (Object.Equals(node, null))
         {
-            return GetNeighbor(NeighborDirection.East);
+            return false;
         }
-        set
+        return this.id == node.id;
+
+    }
+
+    public override int GetHashCode()
+    {
+        return this._my_height * this._my_height * 1009;
+    }
+
+    public override string ToString()
+    {
+        return string.Format("[{0,9},{1,4},{2,4}]",_my_color,_my_height,_my_width);
+    }
+
+    private void UpdatePosition(int height, int width)
+    {
+        _my_height = height;
+        _my_width = width;
+        id = _my_height + " , " + _my_width;
+    }
+
+    public void Init_Node(int height, int width)
+    {
+        _my_height = height;
+        _my_width = width;
+        id = _my_height + " , " + _my_width;
+        _my_color = (NodeColor)Random.Range(0,GAMENODE_COLOR_COUNT);
+    }
+    public void Init_Node(int height, int width,NodeColor color)
+    {
+        _my_color = color;
+        _my_height = height;
+        _my_width = width;
+    }
+    public void UpdatePositionDrop(int height, int width)
+    {
+        UpdatePosition(height, width);
+        //UI stuff here
+    }
+
+    public void UpdatePositionSwap(int height, int width)
+    {
+        UpdatePosition(height, width);
+        //UI stuff Here
+    }
+
+
+    public void IncrementColor()
+    {
+        if(_my_color == NodeColor.Red)
         {
-            SetNeighbor(value,NeighborDirection.East);
-
+            _my_color = NodeColor.Green;
         }
-    }
-
-    public GameNode west_node
-    {
-        get
+        else if (_my_color == NodeColor.Green)
         {
-            return GetNeighbor(NeighborDirection.West);
+            _my_color = NodeColor.Blue;
         }
-        set
+        else if (_my_color == NodeColor.Blue)
         {
-            SetNeighbor(value, NeighborDirection.West);
-        }
-    }
-    public GameNode north_node
-    {
-        get
-        {
-            return GetNeighbor(NeighborDirection.North);
-        }
-        set
-        {
-            SetNeighbor(value, NeighborDirection.North);
-        }
-    }
-
-    public GameNode south_node
-    {
-        get
-        {
-            return GetNeighbor(NeighborDirection.South);
-        }
-        set
-        {
-            SetNeighbor(value, NeighborDirection.South);
+            _my_color = NodeColor.Red;
         }
     }
 
 
-
-    private Color GameNode_color;
-    private int gen_id;
-    
-
-    public GameNode(int id)
+    public NodeColor GetColor()
     {
-
-        gen_id = id;
+        return _my_color;
+    }
+    public int GetRowInd()
+    {
+        return _my_height;
     }
 
-    public int  GetID()
+    public int GetColInd()
     {
-        return gen_id;
-    }
-
-    public void SetNeighbor(GameNode new_neighbor, NeighborDirection direction)
-    {
-
-
-        neighbors[(int)direction] = new_neighbor;
-        new_neighbor.GetNeighbors()[(int)AntiDirection(direction)] = this;
-    }
-
-    public GameNode GetNeighbor(NeighborDirection direction)
-    {
-
-        return neighbors[(int)direction];
-    }
-
-    public void SetNeighbors(GameNode[] new_neighbors)
-    {
-        neighbors = new_neighbors;
-    }
-
-    public GameNode[] GetNeighbors()
-    {
-        return neighbors;
-    }
-
-    private NeighborDirection AntiDirection(NeighborDirection direction)
-    {
-        int LorR = ~((int)direction) & 1;
-        int high_bits = (int)direction & -2;
-
-        return (NeighborDirection)(LorR ^ high_bits);
-
+        return _my_width;
     }
 
 
-    public void SwapWithNeighbor(GameNode swap_neighbor, NeighborDirection direction)
+    public bool IsDestroyed()
     {
-        GameNode[] neighbor_neighbors = swap_neighbor.GetNeighbors();
-        swap_neighbor.SetNeighbors(neighbors);
-        this.neighbors = neighbor_neighbors;
+        return is_destroyed;
+    }
 
-        for (int i = 0; i < neighbors.Length; i++)
-        {
-            if(neighbor_neighbors[i] != null)
-            {
-                neighbor_neighbors[i].SetNeighbor(swap_neighbor, (NeighborDirection)i);
-            }
-            if(neighbors[i] != null)
-            {
-                neighbors[i].SetNeighbor(this, (NeighborDirection)i);
-            }
-
-        }
-        
+    public void NodeDestroy()
+    {
+        is_destroyed = true;
     }
 
     
+
+
+
+
+
 
 
 }
-
-
-
-
-
-
-
 

@@ -2,107 +2,249 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameMap : MonoBehaviour {
+public class GameMap:MonoBehaviour{
+
+    private GameNode[,] _map;
+    private int _map_height;
+    private int _map_width;
+    //0 High
+    private List<GameNode> _to_destroy = new List<GameNode>();
+    private HashSet<GameNode> _visited = new HashSet<GameNode>();
+
+    //private enum NeighborDirection { South=0,East=1,North=2,West=3};
+    private int SOUTH = 0;
+    private int EAST = 1;
+    private int NORTH = 2;
+    private int WEST = 3;
 
 
-
-    private bool is_initialized = false;
-    public GameObject GameNodePrefab;
-
-
-    public void InitializeMap(int square_length)
+    public override string ToString()
     {
+        int node_strlen =(new GameNode()).ToString().Length;
+        string result;
+        string header = string.Format("{0," + node_strlen + "}   ", ""); ;
+        for(int j = 0; j < _map.GetLength(1); j++)
+        {
+            header += string.Format("{0," + node_strlen + "}", j);
+        }
+        result = header + "\n";
 
-
-    }
-	// Use this for initialization
-	void Start () {
-        GameNode SW = create_diamond(5);
-        print_diamond(SW);
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
-
-    private void build_square_map(int square_length)
-    {
+        for(int i = 0;i < _map.GetLength(0); i++)
+        {
+            string row_str = string.Format("{0," + node_strlen + "}",i);
+            for(int j = 0; j < _map.GetLength(1); j++)
+            {
+              if(_map[i,j] == null)
+                {
+                    row_str += string.Format("{0," + node_strlen + "}", _map[i, j]);
+                }
+                else
+                {
+                    row_str += string.Format("{0," + node_strlen + "}", "Null");
+                }
+            }
+            row_str += "\n";
+            result += row_str;
+        }
+        return result;
         
     }
 
-    private GameNode create_diamond(int side_length)
+    public void init_map(int height, int width)
     {
-        GameNode top = new GameNode(1);
 
-        top.east_node = new GameNode(2);
-
-
-        top.north_node = new GameNode(2);
-
-        diamond_rec(top.east_node, top.north_node,side_length);
-
-        return top;
-
-    }
-
-    private void diamond_rec(GameNode east, GameNode north, int side_length)
-    {
-        int end_len = (side_length * 2) - 2;
-
-
-
-        if (end_len == east.GetID() && end_len == north.GetID())
+        _map = new GameNode[height, width];
+        for(int row_indy = 0; row_indy < height; row_indy++)
         {
-            GameNode end_node = new GameNode(east.GetID() + 1);
-            east.north_node = end_node;
-            north.east_node = end_node;
+            for(int col_indy = 0; col_indy < width; col_indy++)
+            {
+
+                _map[row_indy, col_indy] = new GameNode();
+                _map[row_indy, col_indy].Init_Node(row_indy, col_indy);
+            }
         }
-
-        else if (side_length <= east.GetID() && side_length <= north.GetID())
-        {
-
-            east.north_node = new GameNode(east.GetID() + 1);
-            north.east_node = new GameNode(north.GetID() + 1);
-            diamond_rec(east.north_node, north.east_node, side_length);
-        }
-
-        else
-        {
-            east.east_node = new GameNode(east.GetID() + 1);
-            north.north_node = new GameNode(north.GetID() + 1);
-            diamond_rec(east.east_node, north.north_node, side_length);
-        }
-
+        _map_height = height;
+        _map_width = width;
     }
 
 
-    private void print_diamond(GameNode SW_corner)
+    public GameNode GetNode(int row,int col)
     {
-        string diamond_output = "";
-        GameNode curr_node = SW_corner;
-        while(curr_node.north_node != null)
+        if (row >= _map_height || row < 0) return null;
+
+        if (col >= _map_height || col < 0) return null;
+
+        return _map[row, col];
+    }
+
+
+    public void SwapNodes(int row_1, int col_1, int row_2, int col_2)
+    {
+        GameNode temp = _map[row_1, col_1];
+        _map[row_1,col_1] = _map[row_2, col_2];
+        _map[row_2, col_2] = temp;
+
+        _map[row_1, col_1].UpdatePositionSwap(row_1, col_1);
+        _map[row_2, col_2].UpdatePositionSwap(row_2, col_2);
+        UpdateBoard();
+
+    }
+    //Return if change happened
+    //Wait for maximum animation then re update if change occured
+    public bool UpdateBoard()
+    {
+        MarkDestroyed();
+        if (DestroyMarked())
         {
-            diamond_output += "N" + curr_node.GetID();
-            curr_node = curr_node.north_node;
+            Debug.Log(this);
+            DropNodes();
+            Debug.Log(this);
+            return true;
         }
-        while (curr_node.east_node != null)
+        return false;
+
+    }
+
+
+    private void DropNodes()
+    {
+        GameNode curr_node = null;
+        GameNode lower_node = null;
+        int new_indy = 0;
+        for (int row_indy = _map_height - 2; row_indy >= 0 ; row_indy--)
         {
-            diamond_output += "E" + curr_node.GetID();
-            curr_node = curr_node.east_node;
+            for (int col_indy = _map_width - 1; col_indy >= 0; col_indy--)
+            {
+                curr_node = _map[row_indy, col_indy];
+
+                if (Equals(curr_node, null)) continue;
+
+                new_indy = row_indy + 1;
+                lower_node = _map[new_indy, col_indy];
+                Debug.LogFormat("{0}",curr_node);
+                while (Equals(lower_node,null) || lower_node.IsDestroyed() )
+                {
+                    _map[new_indy, col_indy] = curr_node;
+                    _map[new_indy - 1, col_indy] = null;
+
+                    new_indy = new_indy + 1;
+                    if (new_indy == _map_height)
+                    {
+                        break;
+                    }
+                    lower_node = _map[new_indy, col_indy];
+                    Debug.Log(this);
+
+                }
+         
+            }
         }
-        while (curr_node.south_node != null)
+    }
+
+
+    private bool DestroyMarked()
+    {
+        if (_to_destroy.Count == 0) return false;
+        //Debug.Log("Marked");
+        Debug.Log(_to_destroy.Count);
+        foreach (GameNode node in _to_destroy)
         {
-            diamond_output += "S" + curr_node.GetID();
-            curr_node = curr_node.south_node;
+            node.NodeDestroy();
+            _map[node.GetRowInd(), node.GetColInd()] = null;
         }
-        while (curr_node.west_node != null)
+        _to_destroy.Clear();
+
+        return true;
+    }
+
+    private void MarkDestroyed()
+    {
+        GameNode curr_node;
+        for (int row_indy = 0; row_indy < _map_height; row_indy++)
         {
-            diamond_output += "W" + curr_node.GetID();
-            curr_node = curr_node.west_node;
+            for (int col_indy = 0; col_indy < _map_width; col_indy++)
+            {
+                curr_node = _map[row_indy, col_indy];
+                //Debug.Log(curr_node);
+                if (curr_node.IsDestroyed()) continue;
+
+                if (ShouldDestroy(curr_node)) {
+                    _to_destroy.Add(curr_node);
+                    MarkDestroyRec(curr_node);
+                    _visited.Clear();
+                }
+            }
+        }
+    }
+
+    private void MarkDestroyRec(GameNode groot)
+    {
+        _visited.Add(groot);
+        foreach (GameNode neighbor in GetNeighbors(groot))
+        {
+            //Debug.Log(_visited.Count);
+            if (Equals(neighbor,null) || _visited.Contains(neighbor)) continue;
+
+
+            if (groot.GetColor() == neighbor.GetColor())
+            {
+                _to_destroy.Add(neighbor);
+                if (!neighbor.IsDestroyed())
+                {
+                    MarkDestroyRec(neighbor);
+                }
+
+            }
+
         }
 
-        Debug.Log(diamond_output);
+
+    }
+
+    private GameNode[] GetNeighbors(GameNode node)
+    {
+        GameNode[] neighbors = new GameNode[4];
+
+        int node_row = node.GetRowInd();
+        int node_col = node.GetColInd();
+
+        neighbors[NORTH] = GetNode(node_row - 1, node_col);//up
+        neighbors[SOUTH] = GetNode(node_row + 1, node_col);//down
+        neighbors[EAST] = GetNode(node_row, node_col + 1);//right
+        neighbors[WEST] = GetNode(node_row, node_col - 1);//left
+
+        return neighbors;
+    }
+
+
+    private bool ShouldDestroy(GameNode node)
+    {
+        GameNode[] neighbors = GetNeighbors(node);
+        //Debug.LogFormat("{0},{1},{2},{3}", neighbors[0], neighbors[1], neighbors[2], neighbors[3]);
+        if (ColorMatch(neighbors[NORTH], node, neighbors[SOUTH]))
+        {
+            return true;
+        }
+        if (ColorMatch(neighbors[EAST], node, neighbors[WEST]))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private bool ColorMatch(GameNode node1, GameNode root ,GameNode node2)
+    {
+        // THERES A BUG HERE
+        
+
+        if (Equals(node1,null)|| Equals(node2,null))
+        {
+            return false;// is null
+        }
+        
+        if (node1.GetColor() != node2.GetColor()) return false;// do neighbors match
+        if (node1.GetColor() != root.GetColor()) return false;// do the neighbors match the core?
+        return true;
+
     }
 }
